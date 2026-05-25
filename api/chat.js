@@ -1,62 +1,47 @@
 export default async function handler(req, res) {
-  if (req.method !== "POST") return res.status(405).end();
-  
+  if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
+
   try {
-    // 1. Grab your NexusAI payload (including your custom system prompt)
-    const { messages, system, temperature } = req.body;
+    const { messages, system } = req.body;
 
-    let openAiMessages = [];
-    
-    // 2. If your frontend sends the NexusAI persona, format it for Gemini
+    // 1. Format messages for Gemini's endpoint
+    const formattedMessages = [];
     if (system) {
-      openAiMessages.push({ role: "system", content: system });
+      formattedMessages.push({ role: 'system', content: system });
     }
-    
-    // 3. Add the rest of the user/assistant chat history
-    if (messages && messages.length > 0) {
-      openAiMessages = [...openAiMessages, ...messages.map(m => ({
-        role: m.role,
-        content: m.content
-      }))];
+    if (messages) {
+      formattedMessages.push(...messages);
     }
 
-    // 4. Send it to the free Gemini engine
-    const response = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
-      method: "POST",
+    // 2. Call Google Gemini
+    const geminiReq = await fetch('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', {
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.GEMINI_API_KEY}`
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.GEMINI_API_KEY}`
       },
       body: JSON.stringify({
-        model: "gemini-1.5-flash", 
-        messages: openAiMessages,
-        temperature: temperature || 0.7,
+        model: 'gemini-1.5-flash',
+        messages: formattedMessages
       })
     });
 
-    const data = await response.json();
+    const geminiRes = await geminiReq.json();
 
-    // 5. Catch any errors so we can actually see them in Vercel logs
-    if (data.error) {
-      console.error("Gemini Error:", data.error);
-      return res.status(500).json({ error: data.error.message });
+    if (geminiRes.error) {
+      console.error("Gemini API Error:", geminiRes.error);
+      return res.status(500).json({ error: geminiRes.error.message });
     }
 
-    // 6. Repackage the answer to look EXACTLY like Anthropic's Claude
-    res.status(200).json({
-      id: "msg_gemini_mock",
-      type: "message",
-      role: "assistant",
-      model: "claude-mock",
+    // 3. Return the exact Anthropic format that your frontend expects
+    return res.status(200).json({
       content: [
-        { 
-          type: "text", 
-          text: data.choices[0].message.content 
-        }
+        { text: geminiRes.choices[0].message.content }
       ]
     });
+
   } catch (error) {
-    console.error("Server Error:", error);
-    res.status(500).json({ error: error.message });
+    console.error("Proxy Error:", error);
+    return res.status(500).json({ error: error.message });
   }
 }

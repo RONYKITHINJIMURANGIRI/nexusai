@@ -42,9 +42,9 @@ const LOCAL_MODELS = [
   { id:"llama3-70b", name:"Llama 3.3",  size:"70B",  gb:26,  fmt:"Q2_K",   status:"available", speed:"Slow",      quality:"★★★★★" },
 ];
 const CLOUD_MODELS = [
-  { id:"claude-sonnet-4-20250514", name:"Claude Sonnet 4",  provider:"Anthropic", quality:"★★★★★", status:"active" },
+  { id:"claude-sonnet-4-20250514", name:"Claude Sonnet 4",  provider:"Anthropic", quality:"★★★★★", status:"no-key" },
   { id:"gpt-4o",                   name:"GPT-4o",           provider:"OpenAI",    quality:"★★★★★", status:"no-key" },
-  { id:"gemini-1.5-pro",           name:"Gemini 1.5 Pro",   provider:"Google",    quality:"★★★★★", status:"no-key" },
+  { id:"gemini-1.5-pro",           name:"Gemini 1.5 Pro",   provider:"Google",    quality:"★★★★★", status:"active" },
   { id:"gpt-4o-mini",              name:"GPT-4o Mini",      provider:"OpenAI",    quality:"★★★★",  status:"no-key" },
 ];
 const SAMPLE_FILES = [
@@ -744,7 +744,7 @@ function SettingsPage({ settings, setSettings }) {
 export default function NexusAI() {
   const [page, setPage] = useState("chat");
   const [mode, setMode] = useState("hybrid");
-  const [selectedModel, setSelectedModel] = useState("claude-sonnet-4-20250514");
+  const [selectedModel, setSelectedModel] = useState("gemini-1.5-pro");
   const [models, setModels] = useState({ local: LOCAL_MODELS, cloud: CLOUD_MODELS });
   const [files, setFiles] = useState(SAMPLE_FILES);
   const [memories, setMemories] = useState(SAMPLE_MEMORIES);
@@ -753,7 +753,7 @@ export default function NexusAI() {
     { id:1, title:"Getting started", preview:"Hello! I'm NexusAI...",
       messages:[{ role:"assistant",
         content:"Hello! I'm **NexusAI**, your hybrid AI assistant.\n\nI seamlessly combine local offline models with cloud intelligence. Here's what I can do:\n\n• **Chat** using local or cloud AI models\n• **Search** your indexed documents with RAG\n• **Remember** past conversations semantically\n• **Browse** the web when connected\n• **Analyze** your files — PDFs, code, CSVs, images\n\nI'm currently running in **Hybrid Mode**. How can I help you today?",
-        time:"Now", model:"claude-sonnet-4-20250514", mode:"hybrid" }]
+        time:"Now", model:"gemini-1.5-pro", mode:"hybrid" }]
     }
   ]);
   const [activeConvId, setActiveConvId] = useState(1);
@@ -796,7 +796,7 @@ export default function NexusAI() {
         method:"POST",
         headers:{"Content-Type":"application/json"},
         body: JSON.stringify({
-          model:"claude-sonnet-4-20250514",
+          model:"gemini-1.5-pro",
           max_tokens:1000,
           system:`You are NexusAI, an advanced hybrid AI assistant that combines local offline models with cloud intelligence. You have access to a local vector database of documents, semantic memory from past conversations, and web search when online.\n\nCurrent operating mode: ${mode}. Available features: local RAG, semantic memory, ${mode!=="offline"?"web search, ":""}multi-modal understanding.\n\nBe helpful and intelligent. Reference your hybrid architecture naturally when relevant. Format responses with markdown — use **bold**, bullet points (•), headers (##) where it helps readability.`,
           messages: apiMsgs,
